@@ -1,6 +1,6 @@
 # 🛒 AI-Powered Smart Cart for Walmart
 
-'''
+```
 AI-Powered Smart Cart
 ├── AI Model
 ├── backend
@@ -38,4 +38,4 @@ AI-Powered Smart Cart
         ├── index.js
         └── services
             └── api.js
-'''
+```
