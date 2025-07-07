@@ -2,7 +2,6 @@
 
 ```
 AI-Powered Smart Cart
-├── AI Model
 ├── backend
 │   ├── .gitignore
 │   ├── app
@@ -13,6 +12,7 @@ AI-Powered Smart Cart
 │   │   │   └── product.py
 │   │   └── routes
 │   │       ├── __pycache__
+│   │       ├── cart.py
 │   │       └── products.py
 │   ├── firebase
 │   │   └── __init__.py
