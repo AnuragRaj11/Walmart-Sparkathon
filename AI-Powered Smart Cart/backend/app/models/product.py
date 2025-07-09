@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import List
 
 class ProductItem(BaseModel):
     name: str
@@ -8,14 +8,12 @@ class ProductItem(BaseModel):
 class ProductRequest(BaseModel):
     products: List[ProductItem]
 
+class ProductDetail(BaseModel):
+    name: str
+    quantity: int
+    unit_price: float
+    subtotal: float
+
 class ProductResponse(BaseModel):
-    total: float
-    items: List[Dict]
-
-class CartCreateResponse(BaseModel):
-    cart_id: str
-
-class Cart(BaseModel):
-    cart_id: str
-    items: List[ProductItem]
+    items: List[ProductDetail]
     total: float

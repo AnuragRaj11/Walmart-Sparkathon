@@ -1,30 +1,35 @@
-from fastapi import APIRouter
-from app.models.product import ProductRequest, ProductResponse
+from fastapi import APIRouter, UploadFile, File
+from app.models.product import ProductRequest, ProductResponse, ProductItem
+from ai_model.detect import detect_products_from_image
 
 router = APIRouter()
 
-# Simulated product price database
-PRODUCT_DB = {
-    "coke_can": 1.50,
-    "lays_chips": 2.00,
-    "oreo_pack": 1.25,
-    "dettol_soap": 0.99
+PRICE_DB = {
+    "oreo_pack": 2.99,
+    "coke_can": 1.49,
+    "lays_chips": 2.49,
+    "dettol_soap": 1.25
 }
 
 @router.post("/detect", response_model=ProductResponse)
 def detect_products(req: ProductRequest):
-    total = 0
-    detailed_items = []
-
-    for item in req.products:
-        price = PRODUCT_DB.get(item.name, 0)
-        subtotal = price * item.quantity
+    items = []
+    total = 0.0
+    for product in req.products:
+        price = PRICE_DB.get(product.name, 1.0)
+        subtotal = product.quantity * price
         total += subtotal
-        detailed_items.append({
-            "name": item.name,
-            "quantity": item.quantity,
+        items.append({
+            "name": product.name,
+            "quantity": product.quantity,
             "unit_price": price,
             "subtotal": subtotal
         })
+    return {"items": items, "total": total}
 
-    return {"total": total, "items": detailed_items}
+@router.post("/detect-image", response_model=ProductResponse)
+async def detect_from_image(file: UploadFile = File(...)):
+    image_bytes = await file.read()
+    detected = detect_products_from_image(image_bytes)
+    return detect_products(ProductRequest(products=detected))
+
