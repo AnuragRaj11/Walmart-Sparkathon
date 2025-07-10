@@ -1,8 +1,15 @@
 {
-  "short_name": "SmartCart",
-  "name": "Walmart AI-Powered Smart Cart",
+  "short_name": "Smart Cart",
+  "name": "AI-Powered Smart Cart",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff"
+  "theme_color": "#667eea",
+  "background_color": "#f5f7fa"
 }
