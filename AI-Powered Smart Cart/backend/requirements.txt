@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+opencv-python
+ultralytics
+numpy
+python-multipart
+matplotlib
+pillow
+scikit-learn
+pandas
+tqdm
+jupyter
+seaborn
