@@ -10,7 +10,7 @@ AI-Powered Smart Cart
 │   │   ├── product_model.pth
 │   │   ├── train_model.py
 │   │   ├── training_curve.png
-│   │   ├── training_data
+│   │   ├── training_data 
 │   │   │   ├── images
 │   │   │   └── labels.csv
 │   │   └── walmart-products.csv
