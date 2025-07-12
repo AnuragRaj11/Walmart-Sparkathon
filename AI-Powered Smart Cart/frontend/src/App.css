@@ -1130,7 +1130,6 @@ body {
   box-shadow: 0 6px 20px rgba(159, 122, 234, 0.4);
 }
 
-/* Fallback Scanner Styles */
 .fallback-scanner {
   background: #f8f9fa;
   border-radius: 15px;
@@ -1258,7 +1257,6 @@ body {
   color: #495057;
 }
 
-/* Auth.css - Updated */
 .auth-container {
   display: flex;
   flex-direction: column;
