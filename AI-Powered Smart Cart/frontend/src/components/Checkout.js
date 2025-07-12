@@ -4,16 +4,43 @@ const Checkout = ({ items, total, onCheckoutComplete, onBack }) => {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [email, setEmail] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleCheckout = async () => {
     setLoading(true);
-    
-    // Simulate payment processing
-    setTimeout(() => {
+
+    setTimeout(async () => {
       setLoading(false);
       setOrderComplete(true);
-      
-      // Complete checkout after 3 seconds
+
+      // ✅ Send receipt email if email is provided
+      if (email.trim()) {
+        try {
+          const response = await fetch("http://127.0.0.1:8000/checkout-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              email: email,
+              items: items,
+              total: total
+            })
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            setEmailSent(true);
+            console.log("📧 Email sent successfully");
+          } else {
+            console.warn("❌ Failed to send email:", data.message);
+          }
+        } catch (error) {
+          console.error("❌ Email API Error:", error);
+        }
+      }
+
       setTimeout(() => {
         onCheckoutComplete();
       }, 3000);
@@ -39,6 +66,9 @@ const Checkout = ({ items, total, onCheckoutComplete, onBack }) => {
             <div className="receipt-total">
               <strong>Total: ${total.toFixed(2)}</strong>
             </div>
+            {emailSent && (
+              <p className="success-msg">📧 Receipt sent to <strong>{email}</strong></p>
+            )}
           </div>
         </div>
       </div>
@@ -85,7 +115,7 @@ const Checkout = ({ items, total, onCheckoutComplete, onBack }) => {
               <span className="payment-icon">💳</span>
               Credit/Debit Card
             </label>
-            
+
             <label className={`payment-option ${paymentMethod === 'digital' ? 'selected' : ''}`}>
               <input
                 type="radio"
@@ -96,7 +126,7 @@ const Checkout = ({ items, total, onCheckoutComplete, onBack }) => {
               <span className="payment-icon">📱</span>
               Digital Wallet
             </label>
-            
+
             <label className={`payment-option ${paymentMethod === 'cash' ? 'selected' : ''}`}>
               <input
                 type="radio"
@@ -107,6 +137,18 @@ const Checkout = ({ items, total, onCheckoutComplete, onBack }) => {
               <span className="payment-icon">💵</span>
               Cash
             </label>
+          </div>
+
+          <div className="email-input">
+            <label htmlFor="email">Email for Receipt:</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+            />
           </div>
 
           <button

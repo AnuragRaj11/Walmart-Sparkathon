@@ -1,13 +1,11 @@
+import WALMART_PRODUCTS from '../data/walmart-products.json';
 
-const MOCK_PRODUCTS = [];
-
+const MOCK_PRODUCTS = WALMART_PRODUCTS;
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-
 export const detectProduct = async (imageData) => {
   await delay(1000);
-
 
   if (MOCK_PRODUCTS.length === 0) {
     return {
@@ -19,8 +17,7 @@ export const detectProduct = async (imageData) => {
 
   const randomProduct = MOCK_PRODUCTS[Math.floor(Math.random() * MOCK_PRODUCTS.length)];
 
-
-  const confidence = 0.8 + Math.random() * 0.2; 
+  const confidence = 0.8 + Math.random() * 0.2;
 
   return {
     success: true,
@@ -38,7 +35,6 @@ export const getAllProducts = async () => {
   };
 };
 
-
 export const getProductById = async (id) => {
   await delay(300);
   const product = MOCK_PRODUCTS.find(p => p.id === id);
@@ -47,7 +43,6 @@ export const getProductById = async (id) => {
     product: product || null
   };
 };
-
 
 export const searchProducts = async (query) => {
   await delay(400);
@@ -61,7 +56,6 @@ export const searchProducts = async (query) => {
     products: results
   };
 };
-
 
 export const processCheckout = async (items, paymentMethod) => {
   await delay(2000);
