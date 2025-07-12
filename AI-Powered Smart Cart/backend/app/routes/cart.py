@@ -1,7 +1,5 @@
 from fastapi import APIRouter
+from app.routes.send_email import ReceiptRequest  
 
-router = APIRouter()
+router = APIRouter(prefix="/cart", tags=["Cart"])
 
-@router.get("/cart")
-def get_cart():
-    return {"message": "Cart endpoint coming soon."}
