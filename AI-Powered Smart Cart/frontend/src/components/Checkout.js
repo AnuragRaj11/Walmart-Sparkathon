@@ -1,20 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAuth } from "firebase/auth";
 
-const Checkout = ({ items, total, onCheckoutComplete, onBack }) => {
+const Checkout = ({ items, total, onCheckoutComplete, onBack, user }) => {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
 
+  useEffect(() => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (currentUser && currentUser.email) {
+      setEmail(currentUser.email);
+    }
+  }, []);
+
   const handleCheckout = async () => {
     setLoading(true);
+
+    // Basic frontend email validation
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      alert("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
 
     setTimeout(async () => {
       setLoading(false);
       setOrderComplete(true);
 
-      // ✅ Send receipt email if email is provided
       if (email.trim()) {
         try {
           const response = await fetch("http://127.0.0.1:8000/checkout-email", {
@@ -32,12 +47,12 @@ const Checkout = ({ items, total, onCheckoutComplete, onBack }) => {
           const data = await response.json();
           if (data.success) {
             setEmailSent(true);
-            console.log("📧 Email sent successfully");
+            console.log("\u{1F4E7} Email sent successfully");
           } else {
-            console.warn("❌ Failed to send email:", data.message);
+            console.warn("\u{274C} Failed to send email:", data.message);
           }
         } catch (error) {
-          console.error("❌ Email API Error:", error);
+          console.error("\u{274C} Email API Error:", error);
         }
       }
 
