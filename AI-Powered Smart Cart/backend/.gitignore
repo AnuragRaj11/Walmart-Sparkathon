@@ -1,41 +1,20 @@
-# Python
-__pycache__/
-*.py[cod]
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-venv/
-ai_model/*.pth
-
-# Node
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+.venv/
+.env
 
-# IDE
+*.pth
+*.h5
+*.hdf5
+*.onnx
+
+*.log
+*.tmp
+
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# Environment files
-.env
-.env.local
-.env.development
-.env.test
-.env.production
+.DS_Store
