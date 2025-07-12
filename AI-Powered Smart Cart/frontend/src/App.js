@@ -5,22 +5,37 @@ import Checkout from './components/Checkout';
 import { getProductSuggestions } from './services/api';
 import Login from './components/Login';
 import Register from './components/Register';
+import { auth, signOut } from './firebase/firebase';
 import './App.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState('main'); 
+  const [currentView, setCurrentView] = useState('main');
   const [cartItems, setCartItems] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [total, setTotal] = useState(0);
-    const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null);
   const [showLogin, setShowLogin] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUser({
+          email: user.email,
+          name: user.displayName || user.email.split('@')[0],
+          photoURL: user.photoURL
+        });
+      } else {
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const newTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     setTotal(newTotal);
   }, [cartItems]);
 
-  // Get product suggestions when cart changes
   useEffect(() => {
     if (cartItems.length > 0) {
       getProductSuggestions(cartItems).then(result => {
@@ -36,16 +51,13 @@ function App() {
   const handleProductDetected = (product) => {
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === product.id);
-
       if (existingItem) {
-        // Increase quantity if item already exists
         return prevItems.map(item =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       } else {
-        // Add new item with quantity 1
         return [...prevItems, { ...product, quantity: 1 }];
       }
     });
@@ -56,7 +68,6 @@ function App() {
       removeItem(productId);
       return;
     }
-
     setCartItems(prevItems =>
       prevItems.map(item =>
         item.id === productId
@@ -75,6 +86,10 @@ function App() {
   };
 
   const handleCheckout = () => {
+    if (!user) {
+      alert("Please log in to proceed to checkout.");
+      return;
+    }
     if (cartItems.length > 0) {
       setCurrentView('checkout');
     }
@@ -90,6 +105,28 @@ function App() {
     setCurrentView('main');
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  if (!user) {
+    return showLogin ? (
+      <Login
+        onLoginSuccess={() => {}} // Not needed anymore
+        switchToRegister={() => setShowLogin(false)}
+      />
+    ) : (
+      <Register
+        onRegisterSuccess={() => {}} // Not needed anymore
+        switchToLogin={() => setShowLogin(true)}
+      />
+    );
+  }
+
   if (currentView === 'checkout') {
     return (
       <div className="app">
@@ -98,6 +135,7 @@ function App() {
           total={total}
           onCheckoutComplete={handleCheckoutComplete}
           onBack={handleBackToCart}
+          user={user}
         />
       </div>
     );
@@ -107,7 +145,15 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>🛒 AI-Powered Smart Cart</h1>
-        <p>Scan products with your camera to add them to your cart</p>
+        <p>
+          Welcome, {user.email} |{" "}
+          <span
+            style={{ color: "red", cursor: "pointer" }}
+            onClick={handleLogout}
+          >
+            Logout
+          </span>
+        </p>
       </header>
 
       <div className="main-content">
@@ -129,14 +175,13 @@ function App() {
                 onClick={handleCheckout}
                 className="checkout-btn-main"
               >
-                🛒 Proceed to Checkout (${total.toFixed(2)})
+                🧾 Proceed to Checkout (${total.toFixed(2)})
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Product Suggestions */}
       {suggestions.length > 0 && (
         <div className="suggestions-section">
           <h3>💡 You might also like</h3>
@@ -160,7 +205,6 @@ function App() {
         </div>
       )}
 
-      {/* Cart Summary Footer */}
       {cartItems.length > 0 && (
         <div className="cart-footer">
           <div className="cart-summary-footer">
@@ -173,20 +217,6 @@ function App() {
       )}
     </div>
   );
-
-  if (!user) {
-    return showLogin ? (
-      <Login
-        onLoginSuccess={(u) => setUser(u)}
-        switchToRegister={() => setShowLogin(false)}
-      />
-    ) : (
-      <Register
-        onRegisterSuccess={(u) => setUser(u)}
-        switchToLogin={() => setShowLogin(true)}
-      />
-    );
-  }
 }
 
 export default App;
