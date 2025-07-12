@@ -3,15 +3,18 @@ import Camera from './components/Camera';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import { getProductSuggestions } from './services/api';
+import Login from './components/Login';
+import Register from './components/Register';
 import './App.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState('main'); // 'main', 'checkout'
+  const [currentView, setCurrentView] = useState('main'); 
   const [cartItems, setCartItems] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [total, setTotal] = useState(0);
+    const [user, setUser] = useState(null);
+  const [showLogin, setShowLogin] = useState(true);
 
-  // Calculate total whenever cart items change
   useEffect(() => {
     const newTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     setTotal(newTotal);
@@ -33,7 +36,7 @@ function App() {
   const handleProductDetected = (product) => {
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === product.id);
-      
+
       if (existingItem) {
         // Increase quantity if item already exists
         return prevItems.map(item =>
@@ -53,7 +56,7 @@ function App() {
       removeItem(productId);
       return;
     }
-    
+
     setCartItems(prevItems =>
       prevItems.map(item =>
         item.id === productId
@@ -119,10 +122,10 @@ function App() {
             removeItem={removeItem}
             total={total}
           />
-          
+
           {cartItems.length > 0 && (
             <div className="checkout-section">
-              <button 
+              <button
                 onClick={handleCheckout}
                 className="checkout-btn-main"
               >
@@ -144,7 +147,7 @@ function App() {
                 <div className="suggestion-info">
                   <h4>{product.name}</h4>
                   <p className="suggestion-price">${product.price.toFixed(2)}</p>
-                  <button 
+                  <button
                     onClick={() => addSuggestionToCart(product)}
                     className="add-suggestion-btn"
                   >
@@ -170,6 +173,20 @@ function App() {
       )}
     </div>
   );
+
+  if (!user) {
+    return showLogin ? (
+      <Login
+        onLoginSuccess={(u) => setUser(u)}
+        switchToRegister={() => setShowLogin(false)}
+      />
+    ) : (
+      <Register
+        onRegisterSuccess={(u) => setUser(u)}
+        switchToLogin={() => setShowLogin(true)}
+      />
+    );
+  }
 }
 
 export default App;
