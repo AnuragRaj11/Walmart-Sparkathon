@@ -39,7 +39,7 @@ const Camera = ({ onProductDetected }) => {
   useEffect(() => {
     addDebugInfo('Starting camera permission check');
     checkCameraPermissions();
-  }, []);
+  }, [checkCameraPermissions]);
 
   const checkCameraPermissions = async () => {
     try {
