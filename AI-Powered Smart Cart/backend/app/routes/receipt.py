@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Body
 from app.routes.mail_config import fast_mail, MessageSchema
+from pydantic_settings import BaseSettings
+from pydantic import EmailStr
+
 
 router = APIRouter()
 
@@ -20,5 +23,6 @@ async def send_receipt(data: dict = Body(...)):
         body=content,
         subtype="html"
     )
+
     await fast_mail.send_message(message)
     return {"success": True, "message": "Receipt sent"}

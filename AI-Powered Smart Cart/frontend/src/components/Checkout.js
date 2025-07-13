@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth } from "firebase/auth";
 
-const Checkout = ({ items, total, onCheckoutComplete, onBack, user }) => {
+const Checkout = ({ items, total, onCheckoutComplete, onBack }) => {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -19,7 +19,6 @@ const Checkout = ({ items, total, onCheckoutComplete, onBack, user }) => {
   const handleCheckout = async () => {
     setLoading(true);
 
-    // Basic frontend email validation
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       alert("Please enter a valid email address.");
       setLoading(false);
@@ -30,30 +29,28 @@ const Checkout = ({ items, total, onCheckoutComplete, onBack, user }) => {
       setLoading(false);
       setOrderComplete(true);
 
-      if (email.trim()) {
-        try {
-          const response = await fetch("http://127.0.0.1:8000/checkout-email", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              email: email,
-              items: items,
-              total: total
-            })
-          });
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/email/send-receipt", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email,
+            items,
+            total
+          })
+        });
 
-          const data = await response.json();
-          if (data.success) {
-            setEmailSent(true);
-            console.log("\u{1F4E7} Email sent successfully");
-          } else {
-            console.warn("\u{274C} Failed to send email:", data.message);
-          }
-        } catch (error) {
-          console.error("\u{274C} Email API Error:", error);
+        const data = await response.json();
+        if (data.success) {
+          setEmailSent(true);
+          console.log("📧 Receipt sent to:", email);
+        } else {
+          console.warn("❌ Failed to send email:", data.message);
         }
+      } catch (error) {
+        console.error("❌ Error sending receipt:", error);
       }
 
       setTimeout(() => {
@@ -120,38 +117,21 @@ const Checkout = ({ items, total, onCheckoutComplete, onBack, user }) => {
         <div className="payment-section">
           <h3>Payment Method</h3>
           <div className="payment-options">
-            <label className={`payment-option ${paymentMethod === 'card' ? 'selected' : ''}`}>
-              <input
-                type="radio"
-                value="card"
-                checked={paymentMethod === 'card'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
-              <span className="payment-icon">💳</span>
-              Credit/Debit Card
-            </label>
-
-            <label className={`payment-option ${paymentMethod === 'digital' ? 'selected' : ''}`}>
-              <input
-                type="radio"
-                value="digital"
-                checked={paymentMethod === 'digital'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
-              <span className="payment-icon">📱</span>
-              Digital Wallet
-            </label>
-
-            <label className={`payment-option ${paymentMethod === 'cash' ? 'selected' : ''}`}>
-              <input
-                type="radio"
-                value="cash"
-                checked={paymentMethod === 'cash'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
-              <span className="payment-icon">💵</span>
-              Cash
-            </label>
+            {["card", "digital", "cash"].map(method => (
+              <label key={method} className={`payment-option ${paymentMethod === method ? 'selected' : ''}`}>
+                <input
+                  type="radio"
+                  value={method}
+                  checked={paymentMethod === method}
+                  onChange={() => setPaymentMethod(method)}
+                />
+                <span className="payment-icon">
+                  {method === "card" ? "💳" : method === "digital" ? "📱" : "💵"}
+                </span>
+                {method === "card" ? "Credit/Debit Card" :
+                  method === "digital" ? "Digital Wallet" : "Cash"}
+              </label>
+            ))}
           </div>
 
           <div className="email-input">
@@ -171,14 +151,7 @@ const Checkout = ({ items, total, onCheckoutComplete, onBack, user }) => {
             disabled={loading || items.length === 0}
             className="checkout-btn"
           >
-            {loading ? (
-              <>
-                <span className="loading-spinner">⏳</span>
-                Processing...
-              </>
-            ) : (
-              `Pay $${total.toFixed(2)}`
-            )}
+            {loading ? "⏳ Processing..." : `Pay $${total.toFixed(2)}`}
           </button>
         </div>
       </div>
