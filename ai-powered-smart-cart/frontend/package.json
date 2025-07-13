@@ -2,10 +2,20 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "description": "A modern React application that simulates an AI-powered smart shopping cart system where users can scan products using their camera to automatically add items to their cart.",
+  "main": "index.js",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
   "dependencies": {
-    "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.3.0",
+    "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.10.0",
     "firebase": "^11.10.0",
@@ -15,12 +25,6 @@
     "react-scripts": "5.0.1",
     "react-webcam": "^7.2.0",
     "web-vitals": "^2.1.4"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
@@ -40,8 +44,6 @@
       "last 1 safari version"
     ]
   },
-  "description": "A modern React application that simulates an AI-powered smart shopping cart system where users can scan products using their camera to automatically add items to their cart.",
-  "main": "index.js",
   "author": "",
   "license": "ISC"
 }
