@@ -36,46 +36,45 @@ const Camera = ({ onProductDetected }) => {
   }, []);
 
   // Check camera permissions and availability
-  const checkCameraPermissions = async () => {
-    try {
-      addDebugInfo('Checking browser support');
-
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setCameraError('Camera not supported in this browser. Using fallback mode.');
-        setPermissionState('unsupported');
-        setFallbackMode(true);
-        addDebugInfo('getUserMedia not supported - enabling fallback mode');
-        return;
-      }
-
-      addDebugInfo('Browser supports camera API');
-
-      try {
-        addDebugInfo('Attempting direct camera access');
-        const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
-        addDebugInfo('Camera access successful');
-        stream.getTracks().forEach(track => track.stop());
-        setPermissionState('granted');
-        setCameraError(null);
-        setFallbackMode(false);
-        addDebugInfo('Camera permissions verified');
-
-      } catch (error) {
-        addDebugInfo(`Camera access failed: ${error.name} - ${error.message}`);
-        handleCameraError(error);
-      }
-    } catch (error) {
-      console.error('Camera permission check failed:', error);
-      addDebugInfo(`Permission check error: ${error.message}`);
-      setCameraError('Failed to check camera permissions. Using fallback mode.');
-      setPermissionState('error');
+  const checkCameraPermissions = useCallback(async () => {
+  try {
+    addDebugInfo('Checking browser support');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError('Camera not supported in this browser. Using fallback mode.');
+      setPermissionState('unsupported');
       setFallbackMode(true);
+      addDebugInfo('getUserMedia not supported - enabling fallback mode');
+      return;
     }
-  };
-  useEffect(() => {
-    addDebugInfo('Starting camera permission check');
-    checkCameraPermissions();
-  }, []);
+
+    addDebugInfo('Browser supports camera API');
+    try {
+      addDebugInfo('Attempting direct camera access');
+      const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+      addDebugInfo('Camera access successful');
+      stream.getTracks().forEach(track => track.stop());
+      setPermissionState('granted');
+      setCameraError(null);
+      setFallbackMode(false);
+      addDebugInfo('Camera permissions verified');
+    } catch (error) {
+      addDebugInfo(`Camera access failed: ${error.name} - ${error.message}`);
+      handleCameraError(error);
+    }
+  } catch (error) {
+    console.error('Camera permission check failed:', error);
+    addDebugInfo(`Permission check error: ${error.message}`);
+    setCameraError('Failed to check camera permissions. Using fallback mode.');
+    setPermissionState('error');
+    setFallbackMode(true);
+  }
+}, []); // ✅ Stable dependency
+
+useEffect(() => {
+  addDebugInfo('Starting camera permission check');
+  checkCameraPermissions();
+}, [checkCameraPermissions]); // ✅ Clean and lint-safe
+
 
 
   const handleCameraError = (error) => {
