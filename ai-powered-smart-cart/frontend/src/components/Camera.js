@@ -36,16 +36,10 @@ const Camera = ({ onProductDetected }) => {
   }, []);
 
   // Check camera permissions and availability
-  useEffect(() => {
-    addDebugInfo('Starting camera permission check');
-    checkCameraPermissions();
-  }, [checkCameraPermissions]);
-
   const checkCameraPermissions = async () => {
     try {
       addDebugInfo('Checking browser support');
-      
-      // Check if getUserMedia is supported
+
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setCameraError('Camera not supported in this browser. Using fallback mode.');
         setPermissionState('unsupported');
@@ -56,20 +50,16 @@ const Camera = ({ onProductDetected }) => {
 
       addDebugInfo('Browser supports camera API');
 
-      // Skip strict permission checking and try direct access
-      // This is more reliable than permission.query which can be inconsistent
       try {
         addDebugInfo('Attempting direct camera access');
         const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
-        
-        // Success! Camera is accessible
         addDebugInfo('Camera access successful');
         stream.getTracks().forEach(track => track.stop());
         setPermissionState('granted');
         setCameraError(null);
         setFallbackMode(false);
         addDebugInfo('Camera permissions verified');
-        
+
       } catch (error) {
         addDebugInfo(`Camera access failed: ${error.name} - ${error.message}`);
         handleCameraError(error);
@@ -82,13 +72,18 @@ const Camera = ({ onProductDetected }) => {
       setFallbackMode(true);
     }
   };
+  useEffect(() => {
+    addDebugInfo('Starting camera permission check');
+    checkCameraPermissions();
+  }, []);
+
 
   const handleCameraError = (error) => {
     console.error('Camera error:', error);
     addDebugInfo(`Handling camera error: ${error.name}`);
-    
+
     let errorMessage = 'Camera access failed';
-    
+
     switch (error.name) {
       case 'NotAllowedError':
         errorMessage = 'Camera access denied. Using fallback mode.';
@@ -121,7 +116,7 @@ const Camera = ({ onProductDetected }) => {
         setPermissionState('error');
         setFallbackMode(true);
     }
-    
+
     setCameraError(errorMessage);
     addDebugInfo(`Error set: ${errorMessage}`);
   };
@@ -129,8 +124,8 @@ const Camera = ({ onProductDetected }) => {
   const trySimpleConstraints = async () => {
     try {
       addDebugInfo('Trying with basic camera constraints');
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 320, height: 240 } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 320, height: 240 }
       });
       stream.getTracks().forEach(track => track.stop());
       setPermissionState('granted');
@@ -160,7 +155,7 @@ const Camera = ({ onProductDetected }) => {
   const simulateProductScan = (product) => {
     setScanning(true);
     addDebugInfo(`Simulating scan for: ${product.name}`);
-    
+
     // Simulate detection delay
     setTimeout(() => {
       const result = {
@@ -169,12 +164,12 @@ const Camera = ({ onProductDetected }) => {
         confidence: 0.95,
         detectedAt: new Date().toISOString()
       };
-      
+
       setLastDetection(result);
       setDetectionHistory(prev => [result, ...prev.slice(0, 4)]);
       onProductDetected(result.product);
       setScanning(false);
-      
+
       // Show success animation
       setTimeout(() => {
         setLastDetection(null);
@@ -210,7 +205,7 @@ const Camera = ({ onProductDetected }) => {
           setLastDetection(result);
           setDetectionHistory(prev => [result, ...prev.slice(0, 4)]); // Keep last 5 detections
           onProductDetected(result.product);
-          
+
           // Show success animation
           setTimeout(() => {
             setLastDetection(null);
@@ -266,13 +261,13 @@ const Camera = ({ onProductDetected }) => {
           <h2>📱 Product Scanner (Demo Mode)</h2>
           <p>Select products to simulate scanning</p>
         </div>
-        
+
         <div className="fallback-scanner">
           <div className="fallback-info">
             <div className="info-icon">ℹ️</div>
             <p><strong>Camera not available.</strong> You can still test the app by selecting products below:</p>
           </div>
-          
+
           {scanning && (
             <div className="scanning-simulation">
               <div className="scanning-animation">
@@ -281,7 +276,7 @@ const Camera = ({ onProductDetected }) => {
               <p>🔍 Scanning product...</p>
             </div>
           )}
-          
+
           {lastDetection && (
             <div className="detection-overlay">
               <div className="detection-result">
@@ -294,14 +289,14 @@ const Camera = ({ onProductDetected }) => {
               </div>
             </div>
           )}
-          
+
           <div className="product-selector">
             <h4>👆 Choose a product to "scan":</h4>
             {availableProducts.length > 0 ? (
               <div className="product-grid">
                 {availableProducts.map(product => (
-                  <div 
-                    key={product.id} 
+                  <div
+                    key={product.id}
                     className="product-item"
                     onClick={() => !scanning && simulateProductScan(product)}
                     style={{ opacity: scanning ? 0.5 : 1 }}
@@ -321,14 +316,14 @@ const Camera = ({ onProductDetected }) => {
               </div>
             )}
           </div>
-          
+
           <div className="fallback-actions">
             <button onClick={retryCamera} className="retry-btn">
               📹 Try Camera Again
             </button>
           </div>
         </div>
-        
+
         {/* Recent detections */}
         {detectionHistory.length > 0 && (
           <div className="detection-history">
@@ -336,8 +331,8 @@ const Camera = ({ onProductDetected }) => {
             <div className="history-items">
               {detectionHistory.map((detection, index) => (
                 <div key={index} className="history-item">
-                  <img 
-                    src={detection.product.image} 
+                  <img
+                    src={detection.product.image}
                     alt={detection.product.name}
                     className="history-image"
                   />
@@ -347,7 +342,7 @@ const Camera = ({ onProductDetected }) => {
                       {new Date(detection.detectedAt).toLocaleTimeString()}
                     </span>
                   </div>
-                  <button 
+                  <button
                     onClick={() => onProductDetected(detection.product)}
                     className="add-again-btn"
                   >
@@ -370,12 +365,12 @@ const Camera = ({ onProductDetected }) => {
           <h2>📷 Product Scanner</h2>
           <p>Camera setup required</p>
         </div>
-        
+
         <div className="camera-error">
           <div className="error-icon">⚠️</div>
           <h3>Camera Issue</h3>
           <p>{cameraError}</p>
-          
+
           <div className="error-solutions">
             <h4>Solutions:</h4>
             <ul>
@@ -385,7 +380,7 @@ const Camera = ({ onProductDetected }) => {
               <li><strong>Allow Permissions:</strong> Click "Allow" when prompted</li>
             </ul>
           </div>
-          
+
           <div className="error-actions">
             <button onClick={enableFallbackMode} className="demo-mode-btn">
               📱 Use Demo Mode (Works Without Camera)
@@ -423,7 +418,7 @@ const Camera = ({ onProductDetected }) => {
           <p className="camera-loading">📹 Initializing camera...</p>
         )}
       </div>
-      
+
       <div className="camera-feed">
         <Webcam
           audio={false}
@@ -434,7 +429,7 @@ const Camera = ({ onProductDetected }) => {
           onUserMedia={onUserMedia}
           onUserMediaError={onUserMediaError}
         />
-        
+
         {/* Camera loading overlay */}
         {!cameraReady && (
           <div className="camera-loading-overlay">
@@ -442,7 +437,7 @@ const Camera = ({ onProductDetected }) => {
             <p>Starting camera...</p>
           </div>
         )}
-        
+
         {/* Scanning overlay */}
         {scanning && (
           <div className="scanning-overlay">
@@ -452,7 +447,7 @@ const Camera = ({ onProductDetected }) => {
             <p>🔍 Scanning for products...</p>
           </div>
         )}
-        
+
         {/* Detection result overlay */}
         {lastDetection && (
           <div className="detection-overlay">
@@ -466,7 +461,7 @@ const Camera = ({ onProductDetected }) => {
             </div>
           </div>
         )}
-        
+
         {/* Scan target guide */}
         {cameraReady && (
           <div className="scan-guide">
@@ -479,17 +474,17 @@ const Camera = ({ onProductDetected }) => {
           </div>
         )}
       </div>
-      
+
       {/* Error message for capture/detection errors */}
       {cameraError && cameraReady && (
         <div className="capture-error">
           <p>⚠️ {cameraError}</p>
         </div>
       )}
-      
+
       <div className="camera-controls">
-        <button 
-          onClick={capture} 
+        <button
+          onClick={capture}
           disabled={scanning || !cameraReady}
           className="scan-btn"
         >
@@ -508,12 +503,12 @@ const Camera = ({ onProductDetected }) => {
             </>
           )}
         </button>
-        
+
         <button onClick={enableFallbackMode} className="demo-btn">
           📱 Use Demo Mode
         </button>
       </div>
-      
+
       {/* Recent detections */}
       {detectionHistory.length > 0 && (
         <div className="detection-history">
@@ -521,8 +516,8 @@ const Camera = ({ onProductDetected }) => {
           <div className="history-items">
             {detectionHistory.map((detection, index) => (
               <div key={index} className="history-item">
-                <img 
-                  src={detection.product.image} 
+                <img
+                  src={detection.product.image}
                   alt={detection.product.name}
                   className="history-image"
                 />
@@ -532,7 +527,7 @@ const Camera = ({ onProductDetected }) => {
                     {new Date(detection.detectedAt).toLocaleTimeString()}
                   </span>
                 </div>
-                <button 
+                <button
                   onClick={() => onProductDetected(detection.product)}
                   className="add-again-btn"
                 >
