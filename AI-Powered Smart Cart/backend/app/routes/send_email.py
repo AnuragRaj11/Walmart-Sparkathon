@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
-from app.routes.mail_config import send_receipt_email  # Updated import path
+from app.routes.mail_config import send_receipt_email  
 
 router = APIRouter(prefix="/email", tags=["Email"])
 
@@ -19,7 +19,9 @@ async def send_receipt(data: ReceiptRequest):
         )
         return {"success": True, "message": "Email sent"}
     except Exception as e:
+        print("Email send error:", e)  # 👈 Add this
         raise HTTPException(status_code=500, detail=str(e))
+
 
 def generate_receipt_html(items: list, total: float) -> str:
     item_rows = "".join(
