@@ -8,6 +8,8 @@ Walmart-Sparkathon
 │  │  │  ├─ detect.py
 │  │  │  ├─ product_model.pth
 │  │  │  ├─ training_curve.png
+│  │  │  ├─ training_data
+│  │  │  │  ├─ images
 │  │  │  │  └─ labels.csv
 │  │  │  ├─ train_model.py
 │  │  │  ├─ walmart-products.csv
@@ -17,11 +19,15 @@ Walmart-Sparkathon
 │  │  │  │  ├─ product.py
 │  │  │  ├─ routes
 │  │  │  │  ├─ cart.py
+│  │  │  │  ├─ mail_config.py
 │  │  │  │  ├─ products.py
-│  │  ├─ firebase
+│  │  │  │  ├─ receipt.py
+│  │  │  │  ├─ send_email.py
 │  │  ├─ requirements.txt
 │  │  └─ venv
 │  └─ frontend
+│     ├─ package-lock.json
+│     ├─ package.json
 │     ├─ public
 │     │  ├─ index.html
 │     ├─ README.md
@@ -31,7 +37,13 @@ Walmart-Sparkathon
 │        ├─ components
 │        │  ├─ Camera.js
 │        │  ├─ Cart.js
-│        │  └─ Checkout.js
+│        │  ├─ Checkout.js
+│        │  ├─ Login.js
+│        │  └─ Register.js
+│        ├─ data
+│        │  └─ walmart-products.json
+│        ├─ firebase
+│        │  └─ firebase.js
 │        ├─ index.css
 │        ├─ index.js
 │        └─ services
