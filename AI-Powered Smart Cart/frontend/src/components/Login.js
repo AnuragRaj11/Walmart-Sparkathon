@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaGoogle, FaSpinner } from 'react-icons/fa';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
+} from 'firebase/auth';
 import { auth, googleProvider } from '../firebase/firebase';
+
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 const Login = ({ onLoginSuccess, switchToRegister }) => {
   const [email, setEmail] = useState('');
@@ -11,12 +18,25 @@ const Login = ({ onLoginSuccess, switchToRegister }) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result && result.user) {
+          if (onLoginSuccess) onLoginSuccess(result.user);
+        }
+      })
+      .catch((error) => {
+        setErrors({ api: error.message || 'Google login failed. Please try again.' });
+      });
+    // eslint-disable-next-line
+  }, []);
+
   const validate = () => {
     const newErrors = {};
     if (!email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email is invalid';
     if (!password) newErrors.password = 'Password is required';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -24,18 +44,18 @@ const Login = ({ onLoginSuccess, switchToRegister }) => {
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    
+
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
       // onLoginSuccess will be triggered via auth state listener
     } catch (error) {
-      setErrors({ 
-        api: error.message.includes('user-not-found') 
-          ? 'No account found with this email' 
+      setErrors({
+        api: error.message.includes('user-not-found')
+          ? 'No account found with this email'
           : error.message.includes('wrong-password')
           ? 'Incorrect password'
-          : 'Login failed. Please try again.'
+          : error.message || 'Login failed. Please try again.'
       });
     } finally {
       setIsLoading(false);
@@ -45,17 +65,21 @@ const Login = ({ onLoginSuccess, switchToRegister }) => {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
-      // onLoginSuccess will be triggered via auth state listener
+      if (isMobile) {
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        await signInWithPopup(auth, googleProvider);
+      }
+      // onLoginSuccess will be triggered via redirect result or auth listener
     } catch (error) {
-      setErrors({ api: 'Google login failed. Please try again.' });
-    } finally {
-      setIsGoogleLoading(false);
+      setErrors({ api: error.message || 'Google login failed. Please try again.' });
+      setIsGoogleLoading(false); // Only set loading false if not redirecting
     }
+    // If using redirect, user will leave the page so we don't need to set loading false
   };
 
   const handleForgotPassword = () => {
-    // Implement forgot password flow
+    // Implement forgot password flow if needed
     alert('Forgot password flow would be implemented here');
   };
 
@@ -113,6 +137,7 @@ const Login = ({ onLoginSuccess, switchToRegister }) => {
                 type="button"
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)' }}
               >
                 {showPassword ? 'Hide' : 'Show'}
               </button>
