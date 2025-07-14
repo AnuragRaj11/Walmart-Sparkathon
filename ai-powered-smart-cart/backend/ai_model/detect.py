@@ -6,7 +6,7 @@ from PIL import Image
 import io
 from app.models.product import ProductItem
 
-MODEL_PATH = r"C:\Users\KIIT\Desktop\Walmart-Sparkathon\AI-Powered Smart Cart\backend\ai_model\product_model.pth"
+MODEL_PATH = r"C:\Users\KIIT\Desktop\Walmart-Sparkathon\ai-powered-smart-cart\backend\ai_model\product_model.pth"
 IMAGE_SIZE = 224
 
 # Image Transform
