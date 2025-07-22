@@ -20,64 +20,33 @@ const Camera = ({ onProductDetected }) => {
   const [fallbackMode, setFallbackMode] = useState(false);
   const [availableProducts, setAvailableProducts] = useState([]);
 
-  // Add debug logging
-  const addDebugInfo = (message) => {
+  // Memoize addDebugInfo to ensure a stable reference for other callbacks
+  const addDebugInfo = useCallback((message) => {
     console.log('Camera Debug:', message);
     setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${message}`]);
-  };
+  }, []); // Empty dependency array because it only uses `setDebugInfo` which is stable
 
-  // Load products for fallback mode
-  useEffect(() => {
-    getAllProducts().then(result => {
-      if (result.success) {
-        setAvailableProducts(result.products);
-      }
-    });
-  }, []);
-
-  // Check camera permissions and availability
-  const checkCameraPermissions = useCallback(async () => {
-  try {
-    addDebugInfo('Checking browser support');
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setCameraError('Camera not supported in this browser. Using fallback mode.');
-      setPermissionState('unsupported');
-      setFallbackMode(true);
-      addDebugInfo('getUserMedia not supported - enabling fallback mode');
-      return;
-    }
-
-    addDebugInfo('Browser supports camera API');
+  // Memoize trySimpleConstraints as it's called by handleCameraError
+  const trySimpleConstraints = useCallback(async () => {
     try {
-      addDebugInfo('Attempting direct camera access');
-      const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
-      addDebugInfo('Camera access successful');
+      addDebugInfo('Trying with basic camera constraints');
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 320, height: 240 }
+      });
       stream.getTracks().forEach(track => track.stop());
       setPermissionState('granted');
       setCameraError(null);
       setFallbackMode(false);
-      addDebugInfo('Camera permissions verified');
+      addDebugInfo('Basic constraints successful');
     } catch (error) {
-      addDebugInfo(`Camera access failed: ${error.name} - ${error.message}`);
-      handleCameraError(error);
+      addDebugInfo(`Basic constraints also failed: ${error.name}`);
+      setCameraError('Camera not available. Using fallback mode.');
+      setFallbackMode(true);
     }
-  } catch (error) {
-    console.error('Camera permission check failed:', error);
-    addDebugInfo(`Permission check error: ${error.message}`);
-    setCameraError('Failed to check camera permissions. Using fallback mode.');
-    setPermissionState('error');
-    setFallbackMode(true);
-  }
-}, []); // ✅ Stable dependency
+  }, [addDebugInfo, setCameraError, setPermissionState, setFallbackMode]); // Depend on all setters and `addDebugInfo`
 
-useEffect(() => {
-  addDebugInfo('Starting camera permission check');
-  checkCameraPermissions();
-}, [checkCameraPermissions]); // ✅ Clean and lint-safe
-
-
-
-  const handleCameraError = (error) => {
+  // Memoize handleCameraError to ensure a stable reference for checkCameraPermissions
+  const handleCameraError = useCallback((error) => {
     console.error('Camera error:', error);
     addDebugInfo(`Handling camera error: ${error.name}`);
 
@@ -102,8 +71,7 @@ useEffect(() => {
       case 'OverconstrainedError':
         errorMessage = 'Camera does not meet the required constraints. Trying with basic settings...';
         setPermissionState('error');
-        // Try with simpler constraints
-        setTimeout(() => trySimpleConstraints(), 1000);
+        setTimeout(() => trySimpleConstraints(), 1000); // Calls trySimpleConstraints
         break;
       case 'SecurityError':
         errorMessage = 'Camera access blocked due to security restrictions. Using fallback mode.';
@@ -118,25 +86,56 @@ useEffect(() => {
 
     setCameraError(errorMessage);
     addDebugInfo(`Error set: ${errorMessage}`);
-  };
+  }, [addDebugInfo, setCameraError, setPermissionState, setFallbackMode, trySimpleConstraints]); // Depend on all setters, addDebugInfo, and trySimpleConstraints
 
-  const trySimpleConstraints = async () => {
+  // Fix for the original ESLint error: `handleCameraError` must be in deps.
+  const checkCameraPermissions = useCallback(async () => {
     try {
-      addDebugInfo('Trying with basic camera constraints');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 320, height: 240 }
-      });
-      stream.getTracks().forEach(track => track.stop());
-      setPermissionState('granted');
-      setCameraError(null);
-      setFallbackMode(false);
-      addDebugInfo('Basic constraints successful');
+      addDebugInfo('Checking browser support');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraError('Camera not supported in this browser. Using fallback mode.');
+        setPermissionState('unsupported');
+        setFallbackMode(true);
+        addDebugInfo('getUserMedia not supported - enabling fallback mode');
+        return;
+      }
+
+      addDebugInfo('Browser supports camera API');
+      try {
+        addDebugInfo('Attempting direct camera access');
+        const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+        addDebugInfo('Camera access successful');
+        stream.getTracks().forEach(track => track.stop());
+        setPermissionState('granted');
+        setCameraError(null);
+        setFallbackMode(false);
+        addDebugInfo('Camera permissions verified');
+      } catch (error) {
+        addDebugInfo(`Camera access failed: ${error.name} - ${error.message}`);
+        handleCameraError(error); // This is where handleCameraError is used
+      }
     } catch (error) {
-      addDebugInfo(`Basic constraints also failed: ${error.name}`);
-      setCameraError('Camera not available. Using fallback mode.');
+      console.error('Camera permission check failed:', error);
+      addDebugInfo(`Permission check error: ${error.message}`);
+      setCameraError('Failed to check camera permissions. Using fallback mode.');
+      setPermissionState('error');
       setFallbackMode(true);
     }
-  };
+  }, [addDebugInfo, handleCameraError, setCameraError, setPermissionState, setFallbackMode]); // All dependencies correctly listed
+
+  useEffect(() => {
+    addDebugInfo('Starting camera permission check');
+    checkCameraPermissions();
+  }, [checkCameraPermissions, addDebugInfo]); // `addDebugInfo` added here too for consistency, though `checkCameraPermissions` itself is stable
+
+  // Load products for fallback mode (kept separate as it's not a direct dependency for the camera logic)
+  useEffect(() => {
+    getAllProducts().then(result => {
+      if (result.success) {
+        setAvailableProducts(result.products);
+      }
+    });
+  }, []);
 
   const onUserMedia = () => {
     addDebugInfo('Webcam component ready');
@@ -226,31 +225,32 @@ useEffect(() => {
       setCameraError('Failed to capture image. Please try again.');
       setScanning(false);
     }
-  }, [webcamRef, onProductDetected, cameraReady]);
+  }, [webcamRef, onProductDetected, cameraReady, addDebugInfo, setCameraError, setScanning, setLastDetection, setDetectionHistory]);
 
-  const retryCamera = () => {
+
+  const retryCamera = useCallback(() => {
     addDebugInfo('Retrying camera access');
     setCameraError(null);
     setCameraReady(false);
     setPermissionState('checking');
     setFallbackMode(false);
-    setDebugInfo([]);
+    setDebugInfo([]); // Clear debug info on retry
     checkCameraPermissions();
-  };
+  }, [addDebugInfo, setCameraError, setCameraReady, setPermissionState, setFallbackMode, setDebugInfo, checkCameraPermissions]);
 
-  const forceStart = () => {
+  const forceStart = useCallback(() => {
     addDebugInfo('Force starting camera (bypassing permission check)');
     setPermissionState('granted');
     setCameraError(null);
     setFallbackMode(false);
-  };
+  }, [addDebugInfo, setPermissionState, setCameraError, setFallbackMode]);
 
-  const enableFallbackMode = () => {
+  const enableFallbackMode = useCallback(() => {
     addDebugInfo('User enabled fallback mode');
     setFallbackMode(true);
     setCameraError(null);
     setPermissionState('fallback');
-  };
+  }, [addDebugInfo, setFallbackMode, setCameraError, setPermissionState]);
 
   // Render fallback mode (works without camera)
   if (fallbackMode) {
